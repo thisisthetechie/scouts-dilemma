@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% block body %}
+<section class="card">
+  <h1>Game {{g.code}}</h1>
+  <p>Status: <b>{{g.status}}</b> · Round {{g.current_round}}/{{g.total_rounds}}</p>
+
+  <label class="qr-toggle">
+    <input type="checkbox" id="show-qr">
+    Use QR-code popup for player devices
+  </label>
+
+  <div id="device-controls" class="links">
+    <a id="device1-link" href="{{device_urls[1]}}">Device 1</a>
+    <a id="device2-link" href="{{device_urls[2]}}">Device 2</a>
+    <a href="{{url_for('scores',c=g.code)}}">Scoreboard</a>
+  </div>
+
+  <div id="qr-modal" class="modal" hidden aria-hidden="true">
+    <div class="modal-backdrop" data-close-qr></div>
+    <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="qr-modal-title">
+      <button class="modal-close" type="button" aria-label="Close QR code popup" data-close-qr>&times;</button>
+      <h2 id="qr-modal-title">Player device</h2>
+      <img id="qr-image" src="" alt="QR code for player device">
+      <p id="qr-label" class="small"></p>
+      <p><a id="qr-url" class="text-link" href=""></a></p>
+    </section>
+  </div>
+
+  <form method="post" class="actions">
+    {% if g.status=='setup' %}<button name="action" value="start">Start game</button>
+    {% elif g.status=='running' %}<button name="action" value="pause">Pause</button>
+    {% elif g.status=='paused' %}<button name="action" value="resume">Resume</button>{% endif %}
+    <button class="danger" name="action" value="reset" onclick="return confirm('Reset all scores and progress?')">Reset</button>
+  </form>
+
+  {% if pairing_status.display %}
+  <div class="pairing-grid">
+    <section class="pair-status">
+      <h2>Current / preparing</h2>
+      <p class="pair-label">Round {{pairing_status.display.round_no}}, pairing {{pairing_status.display.pair_no + 1}}</p>
+      <div class="player-state"><b>{{pairing_status.display.a_name}}</b><span class="{{'done' if pairing_status.display.a_submitted else 'waiting'}}">{{'Answer entered' if pairing_status.display.a_submitted else 'Waiting for answer'}}</span></div>
+      <div class="player-state"><b>{{pairing_status.display.b_name}}</b><span class="{{'done' if pairing_status.display.b_submitted else 'waiting'}}">{{'Answer entered' if pairing_status.display.b_submitted else 'Waiting for answer'}}</span></div>
+      {% if pairing_status.display.resolved %}<p class="resolved">Pairing resolved</p>{% endif %}
+    </section>
+    <section class="pair-status">
+      <h2>Up next</h2>
+      {% if pairing_status.up_next %}
+      <p class="pair-label">Round {{pairing_status.up_next.round_no}}, pairing {{pairing_status.up_next.pair_no + 1}}</p>
+      <p><b>{{pairing_status.up_next.a_name}}</b></p>
+      <p><b>{{pairing_status.up_next.b_name}}</b></p>
+      {% else %}<p class="small">The next pairing will appear here when available.</p>{% endif %}
+    </section>
+  </div>
+  {% endif %}
+
+  <h2>Participants</h2>
+  <ol>{% for p in players %}<li>{{p.first_name}} {{p.surname}}</li>{% endfor %}</ol>
+  <p class="small">Use the device links for local browser testing. Turn on the QR-code popup, then click Device 1 or Device 2 to display a scannable code.</p>
+</section>
+
+<script>
+const toggle = document.getElementById('show-qr');
+const device1 = document.getElementById('device1-link');
+const device2 = document.getElementById('device2-link');
+const modal = document.getElementById('qr-modal');
+const qrImage = document.getElementById('qr-image');
+const qrLabel = document.getElementById('qr-label');
+const qrUrl = document.getElementById('qr-url');
+const deviceData = {
+  1: {url: {{device_urls[1]|tojson}}, qr: {{device_qrs[1]|tojson}}},
+  2: {url: {{device_urls[2]|tojson}}, qr: {{device_qrs[2]|tojson}}}
+};
+
+const saved = localStorage.getItem('scout-show-qr') === 'true';
+toggle.checked = saved;
+
+function openQr(device) {
+  const data = deviceData[device];
+  qrImage.src = data.qr;
+  qrImage.alt = `QR code for Device ${device}`;
+  qrLabel.textContent = `Scan this code to open Device ${device}`;
+  qrUrl.href = data.url;
+  qrUrl.textContent = data.url;
+  modal.hidden = false;
+  modal.setAttribute('aria-hidden', 'false');
+}
+
+function closeQr() {
+  modal.hidden = true;
+  modal.setAttribute('aria-hidden', 'true');
+}
+
+function applyMode() {
+  const qrMode = toggle.checked;
+  localStorage.setItem('scout-show-qr', String(qrMode));
+  for (const [link, device] of [[device1,1],[device2,2]]) {
+    if (qrMode) {
+      link.href = '#';
+      link.dataset.device = device;
+      link.onclick = (event) => { event.preventDefault(); openQr(device); };
+      link.setAttribute('aria-haspopup', 'dialog');
+    } else {
+      link.href = deviceData[device].url;
+      delete link.dataset.device;
+      link.onclick = null;
+      link.removeAttribute('aria-haspopup');
+    }
+  }
+}
+
+toggle.addEventListener('change', applyMode);
+document.querySelectorAll('[data-close-qr]').forEach(el => el.addEventListener('click', closeQr));
+document.addEventListener('keydown', event => { if (event.key === 'Escape' && !modal.hidden) closeQr(); });
+applyMode();
+function scheduleRefresh() {
+  setTimeout(() => {
+    if (modal.hidden) location.reload();
+    else scheduleRefresh();
+  }, 2000);
+}
+scheduleRefresh();
+</script>
+{% endblock %}
