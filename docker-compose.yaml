@@ -1,0 +1,17 @@
+services:
+  scouts-dilemma:
+    build:
+      context: .
+      dockerfile: dockerfile
+    container_name: scouts-dilemma
+    ports:
+      - 80:8080
+    environment:
+      - PORT=8080
+      - SCOUT_DB=game.db
+      - DEVICE_TRANSITION_SECONDS=10
+      - DEFAULT_SILENT_SILENT=3
+      - DEFAULT_SNITCH_SILENT_SNITCH=5
+      - DEFAULT_SNITCH_SILENT_SILENT=-1
+      - DEFAULT_SNITCH_SNITCH=1
+    restart: unless-stopped

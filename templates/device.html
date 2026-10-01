@@ -1,1 +1,32 @@
-{% extends 'base.html' %}{% block body %}<section class="device"><div class="round">Round {{g.current_round}}/{{g.total_rounds}} · Device {{d}}</div>{% if waiting %}<h1>{{message or 'Waiting for game…'}}</h1><div class="spinner">↻</div>{% elif submitted %}<h1>Choice recorded</h1><p class="huge">Thank you</p><p>Waiting for the other player / next pairing…</p>{% else %}<h1>{{player.first_name}} {{player.surname}}</h1><p>Choose one option:</p><form method="post" class="choices"><button class="silent" name="choice" value="silent"><span>🤫</span>SILENT</button><button class="snitch" name="choice" value="snitch"><span>📣</span>SNITCH</button></form>{% endif %}</section><script>{% if waiting or submitted %}setTimeout(()=>location.reload(),2000){% endif %}</script>{% endblock %}
+{% extends 'base.html' %}{% block body %}
+<section class="device">
+  <div class="round">Round {{g.current_round}}/{{g.total_rounds}}</div>
+  <div class="device-identity">
+    <span>You are</span>
+    <strong>{{player.first_name}} {{player.surname}}</strong>
+  </div>
+  {% if waiting %}
+    <h1>{{message or 'Waiting for game…'}}</h1><div class="spinner">↻</div>
+  {% elif submitted %}
+    {% if opponent %}<p class="opponent">Playing against <strong>{{opponent.first_name}} {{opponent.surname}}</strong></p>{% endif %}
+    <h1>Choice recorded</h1>
+    <p class="huge">Thank you</p>
+    <p>Waiting for everyone to finish this match.</p>
+  {% elif advance %}
+    {% if opponent %}<p class="opponent">Played against <strong>{{opponent.first_name}} {{opponent.surname}}</strong></p>{% endif %}
+    <h1>Match complete</h1>
+    <p class="huge">Thank you</p>
+    <p>The next match will appear shortly.</p>
+  {% else %}
+    <p class="opponent">Playing against <strong>{{opponent.first_name}} {{opponent.surname}}</strong></p>
+    <h1>Choose one option</h1>
+    <form method="post" class="choices">
+      <button class="silent" name="choice" value="silent"><span>🤫</span>SILENT</button>
+      <button class="snitch" name="choice" value="snitch"><span>📣</span>SNITCH</button>
+    </form>
+  {% endif %}
+</section>
+<script>
+setTimeout(() => location.reload(), {{ 1200 if (waiting or submitted or advance) else 10000 }});
+</script>
+{% endblock %}

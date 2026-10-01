@@ -1,0 +1,17 @@
+{% extends 'base.html' %}{% block body %}
+<section class="card join-card">
+  <h1>Join Scout Group Dilemma</h1>
+  <p class="small">Game {{g.code}}</p>
+  {% if closed %}
+    <p class="error">Registration for this game is closed because the game has already started.</p>
+  {% else %}
+    <p>Enter your name exactly as you want the organiser and other participants to see it.</p>
+    {% if error %}<p class="error">{{error}}</p>{% endif %}
+    <form method="post" class="join-form">
+      <label for="name">Your name</label>
+      <input id="name" name="name" value="{{entered_name or ''}}" maxlength="100" autocomplete="name" required autofocus>
+      <button type="submit">Join game</button>
+    </form>
+  {% endif %}
+</section>
+{% endblock %}

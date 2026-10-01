@@ -1,1 +1,18 @@
-{% extends 'base.html' %}{% block body %}<section class="card"><h1>Scout Dilemma</h1><p>Create a game. Enter one full name per line. The game requires an even number of participants.</p>{% if error %}<p class="error">{{error}}</p>{% endif %}<form method="post"><label>Participants</label><textarea name="participants" rows="12" required placeholder="Alex Smith&#10;Jamie Jones">{{participants or ''}}</textarea><label>Rounds</label><input type="number" name="rounds" value="{{rounds or 5}}" min="1" max="50"><button>Create game</button></form></section>{% endblock %}
+{% extends 'base.html' %}{% block body %}
+<section class="card setup-card">
+<h1>Scout Group Dilemma</h1>
+<p>Create the game first. Participants will join afterwards from one shared QR code or URL shown on the Admin Console.</p>
+{% if error %}<p class="error">{{error}}</p>{% endif %}
+<form method="post">
+<label>Rounds</label><input type="number" name="rounds" value="{{rounds or 5}}" min="1" max="50">
+<h2>Scoring</h2>
+<p>Configure the points awarded for each outcome. Tick <strong>Remove points</strong> to make that adjustment a deduction.</p>
+<div class="scoring-grid">
+  <div class="score-rule"><h3>Starting points</h3><div class="score-input-row"><input id="starting_points" type="number" name="starting_points" value="{{starting_points if starting_points is defined else 10}}" min="0" required></div></div>
+  <div class="score-rule"><h3>Silent + Silent</h3><p>Each player</p><div class="score-setting-row"><input id="silent_silent" type="number" name="silent_silent" value="{{silent_silent|abs if silent_silent is defined else 1}}" min="0" required><label class="check-label" for="silent_silent_remove"><input id="silent_silent_remove" type="checkbox" name="silent_silent_remove" {% if (silent_silent if silent_silent is defined else 1) < 0 %}checked{% endif %}><span>Remove points</span></label></div></div>
+  <div class="score-rule"><h3>Snitch + Silent</h3><div class="score-subrow"><label for="snitch_silent">Snitch player</label><div class="score-setting-row"><input id="snitch_silent" type="number" name="snitch_silent" value="{{snitch_silent|abs if snitch_silent is defined else 1}}" min="0" required><label class="check-label" for="snitch_silent_remove"><input id="snitch_silent_remove" type="checkbox" name="snitch_silent_remove" {% if (snitch_silent if snitch_silent is defined else -1) < 0 %}checked{% endif %}><span>Remove points</span></label></div></div><div class="score-subrow"><label for="silent_snitch">Silent player</label><div class="score-setting-row"><input id="silent_snitch" type="number" name="silent_snitch" value="{{silent_snitch|abs if silent_snitch is defined else 5}}" min="0" required><label class="check-label" for="silent_snitch_remove"><input id="silent_snitch_remove" type="checkbox" name="silent_snitch_remove" {% if (silent_snitch if silent_snitch is defined else 5) < 0 %}checked{% endif %}><span>Remove points</span></label></div></div></div>
+  <div class="score-rule"><h3>Snitch + Snitch</h3><p>Each player</p><div class="score-setting-row"><input id="snitch_snitch" type="number" name="snitch_snitch" value="{{snitch_snitch|abs if snitch_snitch is defined else 3}}" min="0" required><label class="check-label" for="snitch_snitch_remove"><input id="snitch_snitch_remove" type="checkbox" name="snitch_snitch_remove" {% if (snitch_snitch if snitch_snitch is defined else 3) < 0 %}checked{% endif %}><span>Remove points</span></label></div></div>
+</div>
+<button type="submit">Create game</button>
+</form></section>
+{% endblock %}
